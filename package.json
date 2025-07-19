@@ -1,0 +1,14 @@
+{
+  "name": "ass-to-webvtt",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "ass-compiler": "^0.1.15"
+  }
+}

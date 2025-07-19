@@ -1,0 +1,127 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:05.000 line:90% position:50% align:center
+This is a test of the ASS format and some basic features in it.
+
+00:00:05.000 --> 00:00:07.000 line:90% position:50% align:center
+This and the previous line should both show at the bottom of the video in 20 pixel high white Arial with a 2 pixel black outline and 2 pixel offset shadow. This line is long so it should automatically be broken into several lines that are approximately even length, with upper lines being longer.
+
+00:00:07.000 --> 00:00:09.000 line:90% position:50% align:center
+Now going to test conflict resolution. {By the way, this is a common abuse, "inline-comments" in override tag groups. They should not be rendered and not generate errors, just be ignored.}
+
+00:00:07.500 --> 00:00:09.000 line:90% position:50% align:center
+This line should be above the previous.
+
+00:00:09.000 --> 00:00:11.000 line:90% position:0% align:start
+This line should be lower-left aligned using the \an1 override.
+
+00:00:11.000 --> 00:00:13.000 line:10% position:100% align:end
+Upper right
+
+00:00:12.000 --> 00:00:14.000 line:10% position:50% align:center
+This one should be below the "Upper right" line and be centered on screen. It should also be in 40 pixel high Times New Roman.
+
+00:00:14.000 --> 00:00:16.000 line:10% position:50% align:center
+This should also be a toptitle in Times New Roman, but much smaller. Using an override tag to change size.
+
+00:00:16.000 --> 00:00:18.000 line:10% position:50% align:center
+Top-left using the legacy \a5 tag
+
+00:00:18.000 --> 00:00:20.000 line:50% position:50% align:center
+This line is centered on screen.
+At the bottom of the screen should be two lines in different layers, they are rendered on top of each other because conflict resolution only considers lines in the same layer.
+
+00:00:18.000 --> 00:00:20.000 line:90% position:50% align:center
+This is in layer 0
+
+00:00:18.000 --> 00:00:20.000 line:90% position:50% align:center
+And this line is in layer 1
+
+00:00:20.000 --> 00:00:22.000 line:90% position:50% align:center
+Another line in layer 0
+
+00:00:20.000 --> 00:00:22.000 line:90% position:50% align:center
+And this line is in layer 1, but has changed its margins so it isn't exactly centered, and it's raised above the other line.
+
+00:00:22.000 --> 00:00:24.000 line:90% position:50% align:center
+Switching font inline, and resetting styles
+
+00:00:24.000 --> 00:00:26.000 line:90% position:50% align:center
+Also switching to a different style inline
+
+00:00:26.000 --> 00:00:28.000 line:50% position:50% align:center
+Positioning... this line should be in an odd place
+
+00:00:26.000 --> 00:00:28.000 line:50% position:50% align:center
+So should this one, and be rotated
+
+00:00:28.000 --> 00:00:30.000 line:90% position:50% align:center
+Some more rotation tricks, this time in 3D and with a different origin
+
+00:00:30.000 --> 00:00:32.000 line:50% position:50% align:center
+This line is animated and rotates 360 degrees over its duration
+
+00:00:32.000 --> 00:00:34.000 line:50% position:50% align:center
+This line moves
+
+00:00:34.000 --> 00:00:36.000 line:50% position:50% align:center
+This line is only partially visible
+so if you can see this, \clip is handled incorrectly
+
+00:00:36.000 --> 00:00:38.000 line:50% position:50% align:center
+And this line has a funnily-shaped clip area
+
+00:00:38.000 --> 00:00:40.000 line:50% position:50% align:center
+Here should be a pretty feather with a thin border and no shadow:
+
+00:00:40.000 --> 00:00:42.000 line:90% position:50% align:center
+Some other basic font style tests:
+Normal, <b>Boldface</b>, <i>Italics</i>, <u>Underline</u>, Strikethrough
+
+00:00:42.000 --> 00:00:44.000 line:90% position:50% align:center
+There should be no linebreak here,but there should be one here
+so this is on a separate line.
+
+00:00:44.000 --> 00:00:46.000 line:90% position:50% align:center
+This line is pushed left by adding some hard spaces to the right\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h\h
+
+00:00:44.000 --> 00:00:46.000 line:90% position:50% align:center
+Regular spaces at line start/end are ignored, so this line is centered
+
+00:00:46.000 --> 00:00:48.000 line:10% position:50% align:center
+This is a long line but it is not broken into several because it's using the \q override tag which changes the line-wrapping mode for a single line. The tag can take several values, 0 is the default which is "smart wrapping" with top lines longer, 1 is regular wrapping, 2 is no wrapping and 3 is smart-wrapping with bottom lines longer.
+
+00:00:46.000 --> 00:00:48.000 line:50% position:50% align:center
+This is a long line using the \q1 override tag to get "dumb" wrapping, make as long lines as possible and first wrap when it'd go off screen. This is mostly visible when the last line generated is short.
+
+00:00:46.000 --> 00:00:48.000 line:90% position:50% align:center
+And this line uses the \q3 wrapping style, which is similar to the \q0 default smart-wrap style, but has lower lines longer than the upper ones.
+
+00:00:48.000 --> 00:00:50.000 line:50% position:50% align:center
+This text has a growing border
+This text has an increasing shadow
+This text is rotating around the Y axis
+This text rotates and this one even more
+
+00:00:50.000 --> 00:00:52.000 line:50% position:50% align:center
+All of this has no border or shadow...
+This is bright red, green, blue
+50% transparent
+
+00:00:52.000 --> 00:00:54.000 line:90% position:50% align:center
+Large inter-letter spacing
+
+00:00:54.000 --> 00:00:56.000 line:90% position:50% align:center
+No shadow here, just regular border, but this is \be1 blurred edges!
+
+00:00:56.000 --> 00:00:58.000 line:90% position:50% align:center
+Fading out after 1 sec on screen, using \alpha. Everything should fade.
+
+00:00:58.000 --> 00:01:00.000 line:90% position:50% align:center
+Fading in and out using \fad
+
+00:01:00.000 --> 00:01:02.000 line:90% position:50% align:center
+And now for karaoke!
+
+00:01:02.000 --> 00:01:04.000 line:50% position:50% align:center
+And the last thing on the programme, an animated rectangular \clip, delayed by 1 second. And it even uses acceleration...!
