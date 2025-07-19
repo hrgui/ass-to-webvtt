@@ -1,8 +1,16 @@
-import { parse, type ParsedASS } from "ass-compiler";
+import {
+  parse,
+  type ParsedASS,
+  type ParsedASSEvent,
+  type ParsedASSEventTextParsed,
+  type ParsedASSStyles,
+} from "ass-compiler";
 import EventEmitter from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
 
 const events = new EventEmitter();
+
+export type ParsedASSStyle = ParsedASSStyles["style"][0];
 
 export type FileOutputEvent<T> = {
   data: T;
@@ -34,7 +42,7 @@ function parsedAssToVtt(parsedAss: ParsedASS) {
   const dialogues = assJson.events.dialogue;
 
   // Build a style lookup map
-  const styleMap: Record<string, any> = {};
+  const styleMap: Record<string, ParsedASSStyle> = {};
   for (const style of assJson.styles.style) {
     styleMap[style.Name] = style;
   }
@@ -43,11 +51,11 @@ function parsedAssToVtt(parsedAss: ParsedASS) {
   const omittedLines: { start: number; end: number; reason: string; raw: string }[] = [];
 
   const cues = dialogues
-    .map((d: any) => {
+    .map((d: ParsedASSEvent) => {
       const start = secondsToVttTime(d.Start);
       const end = secondsToVttTime(d.End);
       const parsed = d.Text?.parsed || [];
-      const style = styleMap[d.Style] || {};
+      const style: Partial<ParsedASSStyle> = styleMap[d.Style] || {};
       const styleAlignment = style.Alignment ? parseInt(style.Alignment, 10) : undefined;
       const vttPos = getVttPositionSettingsFromParsed(parsed, styleAlignment);
       // Omit if unsupported ASS features are present in any parsed segment
@@ -78,7 +86,7 @@ function parsedAssToVtt(parsedAss: ParsedASS) {
         omittedLines.push({ start: d.Start, end: d.End, reason: "unsupported ASS feature", raw });
         // Try to keep the plain text (strip all override tags and drawing commands)
         let plain = parsed
-          .map((seg: any) => seg.text || "")
+          .map((seg) => seg.text || "")
           .join("")
           .replace(/\\N/g, "\n")
           .trim();
@@ -142,7 +150,10 @@ function secondsToVttTime(seconds: number): string {
 }
 
 // Use parsed property for alignment and text formatting
-function getVttPositionSettingsFromParsed(parsed: any[], styleAlignment?: number): string {
+function getVttPositionSettingsFromParsed(
+  parsed: ParsedASSEventTextParsed[],
+  styleAlignment?: number
+): string {
   let align: "start" | "center" | "end" = "center";
   let line: string | undefined = undefined;
   let position: string | undefined = undefined;
@@ -228,7 +239,7 @@ function getVttPositionSettingsFromParsed(parsed: any[], styleAlignment?: number
   return settings.length ? " " + settings.join(" ") : "";
 }
 
-function assParsedToVttText(parsed: any[]): string {
+function assParsedToVttText(parsed: ParsedASSEventTextParsed[]): string {
   // Only allow <b>, <i>, <u> tags
   let out = "";
   for (const seg of parsed) {
