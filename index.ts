@@ -4,14 +4,19 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const events = new EventEmitter();
 
-events.addListener("ParsedAss", async (x: ParsedASS) => {
-  await writeFile("./sample.json", JSON.stringify(x, null, 2), "utf-8");
-  console.log("Written sample.json");
+export type FileOutputEvent<T> = {
+  data: T;
+  filename: string;
+};
+
+events.addListener("OutputASS", async (x: FileOutputEvent<ParsedASS>) => {
+  await writeFile(x.filename, JSON.stringify(x.data, null, 2), "utf-8");
+  console.log("Written " + x.filename);
 });
 
-events.addListener("VTTString", async (x: string) => {
-  await writeFile("./output.vtt", x, "utf-8");
-  console.log("Written output.vtt");
+events.addListener("OutputVTT", async (x: FileOutputEvent<string>) => {
+  await writeFile(x.filename, x.data, "utf-8");
+  console.log("Written " + x.filename);
 });
 
 async function convertToParsedAssJson(file: string): Promise<ParsedASS> {
@@ -104,11 +109,20 @@ function parsedAssToVtt(parsedAss: ParsedASS) {
 }
 
 async function main() {
-  const parsedAss = await convertToParsedAssJson("./sample.ass");
-  events.emit("ParsedAss", parsedAss);
+  const fileName = process.argv[2];
+
+  if (!fileName) {
+    console.error("Please provide a file name as an argument.");
+    return;
+  }
+
+  const outputFileName = fileName.split(".").slice(0, -1).join(".");
+
+  const parsedAss = await convertToParsedAssJson(fileName);
+  events.emit("OutputASS", { data: parsedAss, filename: `${outputFileName}.json` });
 
   const vttString = parsedAssToVtt(parsedAss);
-  events.emit("VTTString", vttString);
+  events.emit("OutputVTT", { data: vttString, filename: `${outputFileName}.vtt` });
 }
 
 function secondsToVttTime(seconds: number): string {
