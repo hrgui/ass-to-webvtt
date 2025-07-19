@@ -9,15 +9,17 @@ events.addListener("ParsedAss", async (x: ParsedASS) => {
   console.log("Written sample.json");
 });
 
+events.addListener("VTTString", async (x: string) => {
+  await writeFile("./output.vtt", x, "utf-8");
+  console.log("Written output.vtt");
+});
+
 async function convertToParsedAssJson(file: string): Promise<ParsedASS> {
   const rawAss = await readFile(file, "utf-8");
   return parse(rawAss);
 }
 
-async function main() {
-  const parsedAss = await convertToParsedAssJson("./sample.ass");
-  events.emit("ParsedAss", parsedAss);
-
+function parsedAssToVtt(parsedAss: ParsedASS) {
   if (parsedAss.events.format.length === 0) {
     throw new Error("Invalid ASS file - missing events format");
   }
@@ -86,7 +88,6 @@ async function main() {
     .filter(Boolean);
 
   const vtt = `WEBVTT\n\n${cues.join("\n\n")}`;
-  await writeFile("./output.vtt", vtt, "utf-8");
 
   if (omittedLines.length > 0) {
     console.warn("OMITTED LINES (not supported in WebVTT):");
@@ -98,6 +99,16 @@ async function main() {
       );
     });
   }
+
+  return vtt;
+}
+
+async function main() {
+  const parsedAss = await convertToParsedAssJson("./sample.ass");
+  events.emit("ParsedAss", parsedAss);
+
+  const vttString = parsedAssToVtt(parsedAss);
+  events.emit("VTTString", vttString);
 }
 
 function secondsToVttTime(seconds: number): string {
@@ -114,80 +125,6 @@ function secondsToVttTime(seconds: number): string {
     "." +
     String(ms).padStart(3, "0")
   );
-}
-
-// Improved ASS to VTT HTML converter with proper tag closing and only allowed tags
-function assToVttHtml(assRaw: string): string {
-  // Replace ASS line breaks with real newlines for VTT
-  let out = assRaw
-    .replace(/\\N/g, "\n")
-    .replace(/<br\s*\/?\s*>/gi, "\n")
-    .replace(/\\n/g, "");
-
-  // Parse override tags
-  // We'll use a stack to manage open tags
-  const tagMap: Record<string, string> = { b: "b", i: "i", u: "u" }; // Only allowed tags
-  let result = "";
-  let tagStack: string[] = [];
-  let i = 0;
-  while (i < out.length) {
-    if (out[i] === "{" && out[i + 1] === "\\") {
-      // Find end of tag
-      const end = out.indexOf("}", i);
-      if (end === -1) break;
-      const tagContent = out.slice(i + 2, end);
-      // Handle resets
-      if (/^r/.test(tagContent)) {
-        // Close all open tags
-        while (tagStack.length) {
-          result += `</${tagStack.pop()}>`;
-        }
-      } else {
-        // Handle style tags
-        const match = tagContent.match(/([bius])([01])/);
-        if (match) {
-          const tag = match[1] as keyof typeof tagMap;
-          const on = match[2];
-          // Only handle allowed tags (b, i, u)
-          if (tagMap.hasOwnProperty(tag)) {
-            if (on === "1") {
-              const htmlTag = tagMap[tag];
-              if (htmlTag) {
-                result += `<${htmlTag}>`;
-                tagStack.push(htmlTag);
-              }
-            } else if (on === "0") {
-              const htmlTag = tagMap[tag];
-              if (htmlTag) {
-                // Close the last matching tag
-                for (let j = tagStack.length - 1; j >= 0; j--) {
-                  if (tagStack[j] === htmlTag) {
-                    result += `</${htmlTag}>`;
-                    tagStack.splice(j, 1);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      i = end + 1;
-    } else {
-      result += out[i];
-      i++;
-    }
-  }
-  // Close any remaining open tags
-  while (tagStack.length) {
-    result += `</${tagStack.pop()}>`;
-  }
-  // Remove any unsupported tags (like <s>, <span>, etc.)
-  result = result.replace(/<\/?s>/g, "");
-  result = result.replace(/<\/?span.*?>/g, "");
-  // Remove any <br> that may have slipped through
-  result = result.replace(/<br\s*\/?\s*>/gi, "\n");
-  return result;
 }
 
 // Use parsed property for alignment and text formatting
