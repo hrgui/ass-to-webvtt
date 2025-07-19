@@ -7,7 +7,7 @@ This is a test of the ASS format and some basic features in it.
 This and the previous line should both show at the bottom of the video in 20 pixel high white Arial with a 2 pixel black outline and 2 pixel offset shadow. This line is long so it should automatically be broken into several lines that are approximately even length, with upper lines being longer.
 
 00:00:07.000 --> 00:00:09.000 line:90% position:50% align:center
-Now going to test conflict resolution. {By the way, this is a common abuse, "inline-comments" in override tag groups. They should not be rendered and not generate errors, just be ignored.}
+Now going to test conflict resolution. 
 
 00:00:07.500 --> 00:00:09.000 line:90% position:50% align:center
 This line should be above the previous.
@@ -24,7 +24,7 @@ This one should be below the "Upper right" line and be centered on screen. It sh
 00:00:14.000 --> 00:00:16.000 line:10% position:50% align:center
 This should also be a toptitle in Times New Roman, but much smaller. Using an override tag to change size.
 
-00:00:16.000 --> 00:00:18.000 line:10% position:50% align:center
+00:00:16.000 --> 00:00:18.000 line:10% position:0% align:start
 Top-left using the legacy \a5 tag
 
 00:00:18.000 --> 00:00:20.000 line:50% position:50% align:center
@@ -79,7 +79,7 @@ Some other basic font style tests:
 Normal, <b>Boldface</b>, <i>Italics</i>, <u>Underline</u>, Strikethrough
 
 00:00:42.000 --> 00:00:44.000 line:90% position:50% align:center
-There should be no linebreak here,but there should be one here
+There should be no linebreak here,\nbut there should be one here
 so this is on a separate line.
 
 00:00:44.000 --> 00:00:46.000 line:90% position:50% align:center

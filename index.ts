@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const rawAss = await readFile("./sample.ass", "utf-8");
 const parsedAss = parse(rawAss);
-await writeFile("./sample.json", JSON.stringify(parsedAss), "utf-8");
+await writeFile("./sample.json", JSON.stringify(parsedAss, null, 2), "utf-8");
 
 // Read the generated JSON and convert to WebVTT
 const assJson = JSON.parse(await readFile("./sample.json", "utf-8"));
@@ -99,68 +99,40 @@ function assToVttHtml(assRaw: string): string {
   return result;
 }
 
-// Map ASS alignment (\an or style Alignment) to WebVTT line/position/align settings
-function getVttPositionSettings(raw: string, styleAlignment?: number): string {
-  // Default: bottom center
+// Use parsed property for alignment and text formatting
+function getVttPositionSettingsFromParsed(parsed: any[], styleAlignment?: number): string {
   let align: "start" | "center" | "end" = "center";
   let line: string | undefined = undefined;
   let position: string | undefined = undefined;
-  // Look for \anN override
   let an: number | undefined = undefined;
-  const anMatch = raw.match(/\\an(\d)/);
-  if (anMatch && anMatch[1]) {
-    an = parseInt(anMatch[1], 10);
-  } else if (styleAlignment) {
-    // Map ASS Alignment (1-9) to \anN
+  // Check all parsed segments for alignment tags, use the last one found
+  for (const seg of parsed) {
+    if (seg.tags) {
+      for (const tag of seg.tags) {
+        if (tag.an) an = tag.an;
+        if (tag.a) {
+          const legacyToAn: Record<number, number> = {
+            1: 1, 2: 2, 3: 3, 5: 7, 6: 8, 7: 9, 9: 4, 10: 5, 11: 6
+          };
+          an = legacyToAn[tag.a];
+        }
+      }
+    }
+  }
+  if (!an && styleAlignment) {
     an = styleAlignment;
   }
   if (an) {
     switch (an) {
-      case 1:
-        align = "start";
-        line = "90%";
-        position = "0%";
-        break;
-      case 2:
-        align = "center";
-        line = "90%";
-        position = "50%";
-        break;
-      case 3:
-        align = "end";
-        line = "90%";
-        position = "100%";
-        break;
-      case 4:
-        align = "start";
-        line = "50%";
-        position = "0%";
-        break;
-      case 5:
-        align = "center";
-        line = "50%";
-        position = "50%";
-        break;
-      case 6:
-        align = "end";
-        line = "50%";
-        position = "100%";
-        break;
-      case 7:
-        align = "start";
-        line = "10%";
-        position = "0%";
-        break;
-      case 8:
-        align = "center";
-        line = "10%";
-        position = "50%";
-        break;
-      case 9:
-        align = "end";
-        line = "10%";
-        position = "100%";
-        break;
+      case 1: align = "start"; line = "90%"; position = "0%"; break;
+      case 2: align = "center"; line = "90%"; position = "50%"; break;
+      case 3: align = "end"; line = "90%"; position = "100%"; break;
+      case 4: align = "start"; line = "50%"; position = "0%"; break;
+      case 5: align = "center"; line = "50%"; position = "50%"; break;
+      case 6: align = "end"; line = "50%"; position = "100%"; break;
+      case 7: align = "start"; line = "10%"; position = "0%"; break;
+      case 8: align = "center"; line = "10%"; position = "50%"; break;
+      case 9: align = "end"; line = "10%"; position = "100%"; break;
     }
   }
   let settings = [];
@@ -168,6 +140,27 @@ function getVttPositionSettings(raw: string, styleAlignment?: number): string {
   if (position) settings.push(`position:${position}`);
   if (align) settings.push(`align:${align}`);
   return settings.length ? " " + settings.join(" ") : "";
+}
+
+function assParsedToVttText(parsed: any[]): string {
+  // Only allow <b>, <i>, <u> tags
+  let out = "";
+  for (const seg of parsed) {
+    let segText = seg.text || "";
+    // Replace \N with real newlines
+    segText = segText.replace(/\\N/g, "\n");
+    let openTags = "";
+    let closeTags = "";
+    if (seg.tags) {
+      for (const tag of seg.tags) {
+        if (tag.b === 1) { openTags += "<b>"; closeTags = "</b>" + closeTags; }
+        if (tag.i === 1) { openTags += "<i>"; closeTags = "</i>" + closeTags; }
+        if (tag.u === 1) { openTags += "<u>"; closeTags = "</u>" + closeTags; }
+      }
+    }
+    out += openTags + segText + closeTags;
+  }
+  return out;
 }
 
 // Build a style lookup map
@@ -183,11 +176,12 @@ const cues = dialogues
   .map((d: any) => {
     const start = secondsToVttTime(d.Start);
     const end = secondsToVttTime(d.End);
-    const raw = d.Text?.raw || d.Text?.combined || "";
+    const parsed = d.Text?.parsed || [];
     const style = styleMap[d.Style] || {};
     const styleAlignment = style.Alignment ? parseInt(style.Alignment, 10) : undefined;
-    const vttPos = getVttPositionSettings(raw, styleAlignment);
-    // Omit if unsupported ASS features are present
+    const vttPos = getVttPositionSettingsFromParsed(parsed, styleAlignment);
+    // Omit if unsupported ASS features are present in any parsed segment
+    const raw = d.Text?.raw || d.Text?.combined || "";
     if (
       /\\p[1-9]/.test(raw) ||
       /\\clip/.test(raw) ||
@@ -213,19 +207,13 @@ const cues = dialogues
     ) {
       omittedLines.push({ start: d.Start, end: d.End, reason: "unsupported ASS feature", raw });
       // Try to keep the plain text (strip all override tags and drawing commands)
-      let plain = raw
-        .replace(/\{[^}]*\}/g, "") // remove all override tags
-        .replace(/<br\s*\/?\s*>/gi, "\n") // replace <br> with newlines
-        .replace(/\\N/g, "\n") // keep line breaks as newlines
-        .replace(/\\n/g, "") // remove soft line breaks
-        .replace(/m [^\\]+/, "") // remove drawing commands
-        .trim();
+      let plain = parsed.map((seg: any) => seg.text || "").join("").replace(/\\N/g, "\n").trim();
       if (plain) {
         return `${start} --> ${end}${vttPos}\n${plain}`;
       }
       return null;
     }
-    const text = assToVttHtml(raw);
+    const text = assParsedToVttText(parsed);
     return `${start} --> ${end}${vttPos}\n${text}`;
   })
   .filter(Boolean);
