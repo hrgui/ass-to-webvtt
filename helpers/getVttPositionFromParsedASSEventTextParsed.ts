@@ -4,12 +4,24 @@ enum AssAlignment {
   BOTTOM_LEFT = 1,
   BOTTOM_CENTER = 2,
   BOTTOM_RIGHT = 3,
-  CENTER_LEFT = 4,
-  CENTER_CENTER = 5,
-  CENTER_RIGHT = 6,
+  MIDDLE_LEFT = 4,
+  MIDDLE_CENTER = 5,
+  MIDDLE_RIGHT = 6,
   TOP_LEFT = 7,
   TOP_CENTER = 8,
   TOP_RIGHT = 9,
+}
+
+enum AssLegacyAlignment {
+  BOTTOM_LEFT = 1,
+  BOTTOM_CENTER = 2,
+  BOTTOM_RIGHT = 3,
+  TOP_LEFT = 5,
+  TOP_CENTER = 6,
+  TOP_RIGHT = 7,
+  MIDDLE_LEFT = 9,
+  MIDDLE_CENTER = 10,
+  MIDDLE_RIGHT = 11,
 }
 
 // Use parsed property for alignment and text formatting
@@ -29,18 +41,18 @@ export function getVttPositionFromParsedASSEventTextParsed(
           an = tag.an;
         }
         if (tag.a) {
-          const legacyToAn: Record<number, number> = {
-            1: 1,
-            2: 2,
-            3: 3,
-            5: 7,
-            6: 8,
-            7: 9,
-            9: 4,
-            10: 5,
-            11: 6,
+          const legacyToAn: Record<AssLegacyAlignment, AssAlignment> = {
+            [AssLegacyAlignment.BOTTOM_LEFT]: AssAlignment.BOTTOM_LEFT,
+            [AssLegacyAlignment.BOTTOM_CENTER]: AssAlignment.BOTTOM_CENTER,
+            [AssLegacyAlignment.BOTTOM_RIGHT]: AssAlignment.BOTTOM_RIGHT,
+            [AssLegacyAlignment.TOP_LEFT]: AssAlignment.TOP_LEFT,
+            [AssLegacyAlignment.TOP_CENTER]: AssAlignment.TOP_CENTER,
+            [AssLegacyAlignment.TOP_RIGHT]: AssAlignment.TOP_RIGHT,
+            [AssLegacyAlignment.MIDDLE_LEFT]: AssAlignment.MIDDLE_LEFT,
+            [AssLegacyAlignment.MIDDLE_CENTER]: AssAlignment.MIDDLE_CENTER,
+            [AssLegacyAlignment.MIDDLE_RIGHT]: AssAlignment.MIDDLE_RIGHT,
           };
-          an = legacyToAn[tag.a];
+          an = legacyToAn[tag.a as AssLegacyAlignment];
         }
       }
     }
@@ -65,17 +77,17 @@ export function getVttPositionFromParsedASSEventTextParsed(
       line = 90;
       position = 100;
       break;
-    case AssAlignment.CENTER_LEFT:
+    case AssAlignment.MIDDLE_LEFT:
       align = "start";
       line = 50;
       position = 0;
       break;
-    case AssAlignment.CENTER_CENTER:
+    case AssAlignment.MIDDLE_CENTER:
       align = "center";
       line = 50;
       position = 50;
       break;
-    case AssAlignment.CENTER_RIGHT:
+    case AssAlignment.MIDDLE_RIGHT:
       align = "end";
       line = 50;
       position = 100;
