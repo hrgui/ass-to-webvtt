@@ -2,8 +2,12 @@
   "name": "ass-to-webvtt",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "test": "vitest"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -1,23 +1,20 @@
 import type { ParsedASS, ParsedASSEvent } from "ass-compiler";
 import type { ParsedASSStyle } from "..";
 import { secondsToHHMMSS } from "./secondsToHHMMSS";
-import { getVttPositionFromParsedASSEventTextParsed } from "./getVttPositionFromParsedASSEventTextParsed";
+import { getVTTPositionFromParsedASSEventTextParsed } from "./getVTTPositionFromParsedASSEventTextParsed";
 import { parsedASSEventTextParsedToVTTText } from "./parsedASSEventTextParsedToVTTText";
+import { createASSStyleMap } from "./createASSStyleMap";
 
-export function parsedASStoVTT(parsedAss: ParsedASS) {
-  if (parsedAss.events.format.length === 0) {
+export function parsedASStoVTT(parsedASS: ParsedASS) {
+  if (parsedASS.events.format.length === 0) {
     throw new Error("Invalid ASS file - missing events format");
   }
 
   // Read the generated JSON and convert to WebVTT
-  const assJson = parsedAss;
-  const dialogues = assJson.events.dialogue;
+  const dialogues = parsedASS.events.dialogue;
 
   // Build a style lookup map
-  const styleMap: Record<string, ParsedASSStyle> = {};
-  for (const style of assJson.styles.style) {
-    styleMap[style.Name] = style;
-  }
+  const styleMap = createASSStyleMap(parsedASS);
 
   // Track omitted lines
   const omittedLines: { start: number; end: number; reason: string; raw: string }[] = [];
@@ -29,7 +26,7 @@ export function parsedASStoVTT(parsedAss: ParsedASS) {
       const parsed = d.Text?.parsed || [];
       const style: Partial<ParsedASSStyle> = styleMap[d.Style] || {};
       const styleAlignment = style.Alignment ? parseInt(style.Alignment, 10) : undefined;
-      const vttPos = getVttPositionFromParsedASSEventTextParsed(parsed, styleAlignment);
+      const vttPos = getVTTPositionFromParsedASSEventTextParsed(parsed, styleAlignment);
       // Omit if unsupported ASS features are present in any parsed segment
       const raw = d.Text?.raw || d.Text?.combined || "";
       if (
@@ -63,12 +60,12 @@ export function parsedASStoVTT(parsedAss: ParsedASS) {
           .replace(/\\N/g, "\n")
           .trim();
         if (plain) {
-          return `${start} --> ${end}${vttPos}\n${plain}`;
+          return `${start} --> ${end} ${vttPos}\n${plain}`;
         }
         return null;
       }
       const text = parsedASSEventTextParsedToVTTText(parsed);
-      return `${start} --> ${end}${vttPos}\n${text}`;
+      return `${start} --> ${end} ${vttPos}\n${text}`;
     })
     .filter(Boolean);
 
