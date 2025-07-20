@@ -4,10 +4,13 @@ import { secondsToHHMMSS } from "./secondsToHHMMSS";
 import { getVTTPositionFromParsedASSEventTextParsed } from "./getVTTPositionFromParsedASSEventTextParsed";
 import { parsedASSEventTextParsedToVTTText } from "./parsedASSEventTextParsedToVTTText";
 import { createASSStyleMap } from "./createASSStyleMap";
+import { createLogger } from "./logger/logger";
 
 export function parsedASStoVTT(parsedASS: ParsedASS) {
+  const logger = createLogger("parsedASStoVTT");
+
   if (parsedASS.events.format.length === 0) {
-    throw new Error("Invalid ASS file - missing events format");
+    throw new Error("[parsedASStoVTT]: Invalid ASS file - missing events format");
   }
 
   // Read the generated JSON and convert to WebVTT
@@ -72,9 +75,9 @@ export function parsedASStoVTT(parsedASS: ParsedASS) {
   const vtt = `WEBVTT\n\n${cues.join("\n\n")}`;
 
   if (omittedLines.length > 0) {
-    console.warn("OMITTED LINES (not supported in WebVTT):");
+    logger.warn("OMITTED LINES (not supported in WebVTT):");
     omittedLines.forEach((l) => {
-      console.warn(
+      logger.warn(
         `Start: ${secondsToHHMMSS(l.start)}, End: ${secondsToHHMMSS(l.end)}, Reason: ${
           l.reason
         }, Raw: ${l.raw}`
