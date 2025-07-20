@@ -1,5 +1,5 @@
 import { parse, type ParsedASS, type ParsedASSStyles } from "ass-compiler";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { parsedASStoVTT } from "../parsedASStoVTT";
 import { setupFileWriterEventListeners } from "./fileWriters";
 import { emitOutputParsedASSFileEvent } from "./emitOutputParsedASSFileEvent";
