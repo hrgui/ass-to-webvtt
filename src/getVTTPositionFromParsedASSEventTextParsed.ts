@@ -59,9 +59,6 @@ export function getVTTPositionFromParsedASSEventTextParsed(
   parsed: ParsedASSEventTextParsed[],
   styleAlignment?: number
 ): string {
-  let align: "start" | "center" | "end" = "center";
-  let line: number | undefined = undefined;
-  let position: number | undefined = undefined;
   let an: number | undefined = undefined;
   // Check all parsed segments for alignment tags, use the last one found
   for (const seg of parsed) {
@@ -80,6 +77,13 @@ export function getVTTPositionFromParsedASSEventTextParsed(
     an = styleAlignment;
   }
 
+  return an ? ASSAlignmentToVTTPosition(an) : "";
+}
+
+export function ASSAlignmentToVTTPosition(an: number): string {
+  let align: "start" | "center" | "end" = "center";
+  let line: number | undefined = undefined;
+  let position: number | undefined = undefined;
   switch (an) {
     case AssAlignment.BOTTOM_LEFT:
       align = "start";

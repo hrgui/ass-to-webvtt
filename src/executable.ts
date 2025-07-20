@@ -1,7 +1,7 @@
 import { parse, type ParsedASS, type ParsedASSStyles } from "ass-compiler";
 import EventEmitter from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
-import { parsedASStoVTT } from "./helpers/parsedASStoVTT";
+import { parsedASStoVTT } from "./parsedASStoVTT";
 
 const events = new EventEmitter();
 

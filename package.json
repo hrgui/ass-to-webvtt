@@ -1,6 +1,6 @@
 {
   "name": "ass-to-webvtt",
-  "module": "index.ts",
+  "module": "./src/executable.ts",
   "type": "module",
   "scripts": {
     "test": "vitest"

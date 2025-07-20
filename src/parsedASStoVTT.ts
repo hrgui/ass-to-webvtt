@@ -1,5 +1,5 @@
 import type { ParsedASS, ParsedASSEvent } from "ass-compiler";
-import type { ParsedASSStyle } from "..";
+import type { ParsedASSStyle } from "./executable";
 import { secondsToHHMMSS } from "./secondsToHHMMSS";
 import { getVTTPositionFromParsedASSEventTextParsed } from "./getVTTPositionFromParsedASSEventTextParsed";
 import { parsedASSEventTextParsedToVTTText } from "./parsedASSEventTextParsedToVTTText";

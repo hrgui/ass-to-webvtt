@@ -1,8 +1,8 @@
 import { getVTTPositionFromParsedASSEventTextParsed } from "../getVTTPositionFromParsedASSEventTextParsed";
-import { describe, expect, it, test } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createParsedASS } from "./helpers/createParsedASS";
 import { createASSStyleMap } from "../createASSStyleMap";
-import type { ParsedASSStyle } from "../..";
+import type { ParsedASSStyle } from "../executable";
 
 function createTestSuite(dialogue: string, styles: string) {
   const parsedASS = createParsedASS(dialogue, styles);
