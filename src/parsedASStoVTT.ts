@@ -5,6 +5,7 @@ import { getVTTPositionFromParsedASSEventTextParsed } from "./getVTTPositionFrom
 import { parsedASSEventTextParsedToVTTText } from "./parsedASSEventTextParsedToVTTText";
 import { createASSStyleMap } from "./createASSStyleMap";
 import { createLogger } from "./logger/logger";
+import { parsedASSEventStrContainsUnsupportedTag } from "./parsedASSEventStrContainsUnsupportedTag";
 
 export function parsedASStoVTT(parsedASS: ParsedASS) {
   const logger = createLogger("parsedASStoVTT");
@@ -20,7 +21,12 @@ export function parsedASStoVTT(parsedASS: ParsedASS) {
   const styleMap = createASSStyleMap(parsedASS);
 
   // Track omitted lines
-  const omittedLines: { start: number; end: number; reason: string; raw: string }[] = [];
+  const impactedLines: {
+    start: number;
+    end: number;
+    raw: string;
+    omitted: boolean;
+  }[] = [];
 
   const cues = dialogues
     .map((d: ParsedASSEvent) => {
@@ -32,55 +38,50 @@ export function parsedASStoVTT(parsedASS: ParsedASS) {
       const vttPos = getVTTPositionFromParsedASSEventTextParsed(parsed, styleAlignment);
       // Omit if unsupported ASS features are present in any parsed segment
       const raw = d.Text?.raw || d.Text?.combined || "";
-      if (
-        /\\p[1-9]/.test(raw) ||
-        /\\clip/.test(raw) ||
-        /\\move/.test(raw) ||
-        /\\pos/.test(raw) ||
-        /\\org/.test(raw) ||
-        /\\fad/.test(raw) ||
-        /\\fade/.test(raw) ||
-        /\\t\(/.test(raw) ||
-        /\\be/.test(raw) ||
-        /\\blur/.test(raw) ||
-        /\\shad[1-9]/.test(raw) ||
-        /\\bord[1-9]/.test(raw) ||
-        /\\frx/.test(raw) ||
-        /\\fry/.test(raw) ||
-        /\\frz/.test(raw) ||
-        /\\fax/.test(raw) ||
-        /\\fay/.test(raw) ||
-        /\\xbord/.test(raw) ||
-        /\\ybord/.test(raw) ||
-        /\\xshad/.test(raw) ||
-        /\\yshad/.test(raw)
-      ) {
-        omittedLines.push({ start: d.Start, end: d.End, reason: "unsupported ASS feature", raw });
-        // Try to keep the plain text (strip all override tags and drawing commands)
-        let plain = parsed
-          .map((seg) => seg.text || "")
-          .join("")
-          .replace(/\\N/g, "\n")
-          .trim();
-        if (plain) {
-          return `${start} --> ${end} ${vttPos}\n${plain}`;
-        }
-        return null;
-      }
+      const containsUnsupportedOverride = parsedASSEventStrContainsUnsupportedTag(raw);
+
       const text = parsedASSEventTextParsedToVTTText(parsed);
+      if (!text) {
+        // Omit if unsupported ASS features are present in any parsed segment
+        impactedLines.push({
+          start: d.Start,
+          end: d.End,
+          omitted: true,
+          raw,
+        });
+        return null;
+      } else if (containsUnsupportedOverride) {
+        impactedLines.push({
+          start: d.Start,
+          end: d.End,
+          omitted: false,
+          raw,
+        });
+      }
       return `${start} --> ${end} ${vttPos}\n${text}`;
     })
     .filter(Boolean);
 
   const vtt = `WEBVTT\n\n${cues.join("\n\n")}`;
 
-  if (omittedLines.length > 0) {
-    logger.warn("OMITTED LINES (not supported in WebVTT):");
-    omittedLines.forEach((l) => {
+  if (impactedLines.length > 0) {
+    const omittedLines = impactedLines.filter((l) => l.omitted);
+    if (omittedLines.length) {
+      logger.warn("OMITTED LINES (nothing can be outputted, possibly this is an image):");
+      omittedLines.forEach((l) => {
+        logger.warn(
+          `Start: ${secondsToHHMMSS(l.start)}, End: ${secondsToHHMMSS(l.end)}, Raw: ${l.raw}`
+        );
+      });
+      logger.log("--------------------\n\n");
+    }
+
+    const otherLines = impactedLines.filter((l) => !l.omitted);
+
+    logger.warn("OTHER LINES (text was preserved as much as possible):");
+    otherLines.forEach((l) => {
       logger.warn(
-        `Start: ${secondsToHHMMSS(l.start)}, End: ${secondsToHHMMSS(l.end)}, Reason: ${
-          l.reason
-        }, Raw: ${l.raw}`
+        `Start: ${secondsToHHMMSS(l.start)}, End: ${secondsToHHMMSS(l.end)}, Raw: ${l.raw}`
       );
     });
   }
