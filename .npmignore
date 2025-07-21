@@ -2,3 +2,6 @@
 .github
 src
 *.test.d.ts.*
+sample.ass
+sample.json
+sample.vtt

@@ -3,6 +3,9 @@
   "version": "0.0.0-publish-using-github-actions.0",
   "type": "module",
   "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": {
