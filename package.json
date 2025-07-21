@@ -1,9 +1,19 @@
 {
-  "name": "ass-to-webvtt",
-  "module": "./src/executable/index.ts",
+  "name": "@hrgui/ass-to-webvtt",
+  "version": "0.0.0-publish-using-github-actions.0",
   "type": "module",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "build": "rm -rf dist && tsc"
   },
   "devDependencies": {
     "@types/bun": "latest",

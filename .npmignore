@@ -1,0 +1,4 @@
+.husky
+.github
+src
+*.test.d.ts.*
