@@ -27,6 +27,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "ass-compiler": "^0.1.15"
+    "ass-compiler": "^0.1.15",
+    "events": "^3.3.0"
   }
 }
