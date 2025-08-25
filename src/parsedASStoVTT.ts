@@ -36,7 +36,7 @@ export function parsedASStoVTT(
   }[] = [];
 
   const cues = dialogues
-    .map((d: ParsedASSEvent) => {
+    .map((d: ParsedASSEvent, index) => {
       const start = secondsToHHMMSS(d.Start);
       const end = secondsToHHMMSS(d.End);
       const parsed = d.Text?.parsed || [];
@@ -68,6 +68,7 @@ export function parsedASStoVTT(
       // Add isUnsupported to d for the comment
       const dWithFlag = { ...d, isUnsupported: containsUnsupportedOverride };
       return `
+${index + 1}
 ${start} --> ${end} ${vttPos}
 ${
   containsUnsupportedOverride && options.type === "subtitles"
