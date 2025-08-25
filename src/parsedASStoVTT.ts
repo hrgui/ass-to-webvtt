@@ -7,7 +7,14 @@ import { createASSStyleMap } from "./createASSStyleMap";
 import { createLogger } from "./logger/logger";
 import { parsedASSEventStrContainsUnsupportedTag } from "./parsedASSEventStrContainsUnsupportedTag";
 
-export function parsedASStoVTT(parsedASS: ParsedASS) {
+export interface ParsedASStoVTTOptions {
+  type?: "subtitles" | "captions" | "metadata";
+}
+
+export function parsedASStoVTT(
+  parsedASS: ParsedASS,
+  options: ParsedASStoVTTOptions = { type: "subtitles" }
+) {
   const logger = createLogger("parsedASStoVTT");
 
   if (parsedASS.events.format.length === 0) {
@@ -58,7 +65,17 @@ export function parsedASStoVTT(parsedASS: ParsedASS) {
           raw,
         });
       }
-      return `${start} --> ${end} ${vttPos}\n${text}`;
+      // Add isUnsupported to d for the comment
+      const dWithFlag = { ...d, isUnsupported: containsUnsupportedOverride };
+      return `
+${start} --> ${end} ${vttPos}
+${
+  containsUnsupportedOverride && options.type === "subtitles"
+    ? " "
+    : options.type === "metadata"
+    ? JSON.stringify(dWithFlag)
+    : text
+}`;
     })
     .filter(Boolean);
 
