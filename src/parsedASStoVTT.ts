@@ -48,7 +48,7 @@ export function parsedASStoVTT(
       const containsUnsupportedOverride = parsedASSEventStrContainsUnsupportedTag(raw);
 
       const text = parsedASSEventTextParsedToVTTText(parsed);
-      if (!text) {
+      if (!text || (containsUnsupportedOverride && options.type === "subtitles")) {
         // Omit if unsupported ASS features are present in any parsed segment
         impactedLines.push({
           start: d.Start,
@@ -66,17 +66,10 @@ export function parsedASStoVTT(
         });
       }
       // Add isUnsupported to d for the comment
-      const dWithFlag = { ...d, isUnsupported: containsUnsupportedOverride };
       return `
 ${index + 1}
 ${start} --> ${end} ${vttPos}
-${
-  containsUnsupportedOverride && options.type === "subtitles"
-    ? " "
-    : options.type === "metadata"
-    ? JSON.stringify(dWithFlag)
-    : text
-}`;
+${text}`;
     })
     .filter(Boolean);
 
